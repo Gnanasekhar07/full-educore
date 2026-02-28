@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          String         @default("STUDENT")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  courses       Course[]       @relation("TeacherCourses")
+  enrollments   Enrollment[]
+  quizAttempts  QuizAttempt[]
+  announcements Announcement[]
+}
+
+model Course {
+  id            String         @id @default(uuid())
+  title         String
+  description   String
+  teacherId     String
+  teacher       User           @relation("TeacherCourses", fields: [teacherId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  enrollments   Enrollment[]
+  quizzes       Quiz[]
+  announcements Announcement[]
+}
+
+model Enrollment {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  enrolledAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model Quiz {
+  id          String        @id @default(uuid())
+  title       String
+  courseId    String
+  course      Course        @relation(fields: [courseId], references: [id])
+  startDate   DateTime?     
+  endDate     DateTime?     
+  timeLimit   Int?          // in minutes
+  questions   Question[]
+  attempts    QuizAttempt[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Question {
+  id          String   @id @default(uuid())
+  quizId      String
+  quiz        Quiz     @relation(fields: [quizId], references: [id])
+  text        String
+  options     String
+  correctAnswer String
+}
+
+model QuizAttempt {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  quizId    String
+  quiz      Quiz     @relation(fields: [quizId], references: [id])
+  score     Int
+  total     Int
+  attemptedAt DateTime @default(now())
+}
+
+model Announcement {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  courseId  String?
+  course    Course?  @relation(fields: [courseId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+}

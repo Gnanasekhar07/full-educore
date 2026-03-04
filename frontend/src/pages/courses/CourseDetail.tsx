@@ -187,14 +187,10 @@ const CourseDetail = () => {
                                 What you'll learn
                             </h3>
                             <ul className="grid md:grid-cols-2 gap-4">
-                                {[
-                                    'Build production-ready React applications',
-                                    'Master Express.js for scalable backends',
-                                    'Database design and SQL optimization',
-                                    'Authentication and Security best practices',
-                                    'Deployment and CI/CD pipelines',
-                                    'API Architecture and documentation'
-                                ].map((point, idx) => (
+                                {(course.description
+                                    ? course.description.split(/[.\n]/).map((s: string) => s.trim()).filter((s: string) => s.length > 10).slice(0, 6)
+                                    : ['Understand core concepts', 'Apply skills in practice']
+                                ).map((point: string, idx: number) => (
                                     <li key={idx} className="flex gap-2 text-slate-600 text-sm">
                                         <CheckCircle2 size={16} className="text-green-500 flex-shrink-0 mt-0.5" />
                                         {point}

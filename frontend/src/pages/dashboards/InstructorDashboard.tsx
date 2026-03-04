@@ -13,6 +13,7 @@ import DashboardLayout from '../../components/DashboardLayout';
 import AnnouncementFeed from '../../components/AnnouncementFeed';
 import { courseService, authService, announcementService } from '../../services/apiServices';
 import CourseCard from '../../components/CourseCard';
+import StreakDisplay from '../../components/StreakDisplay';
 import { Link } from 'react-router-dom';
 
 const InstructorDashboard = () => {
@@ -79,6 +80,8 @@ const InstructorDashboard = () => {
                     <h1 className="text-3xl font-bold text-slate-900">Instructor Overview</h1>
                     <p className="text-slate-500">Track your courses and student performance in real-time.</p>
                 </div>
+
+                <StreakDisplay />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     {stats.map((stat, idx) => (

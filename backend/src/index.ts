@@ -7,6 +7,7 @@ import courseRoutes from './routes/courseRoutes.js';
 import enrollmentRoutes from './routes/enrollmentRoutes.js';
 import quizRoutes from './routes/quizRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use('/api/courses', courseRoutes);
 app.use('/api/enrollments', enrollmentRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/announcements', announcementRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.get('/', (req, res) => {
     res.send('EduCore API is running...');

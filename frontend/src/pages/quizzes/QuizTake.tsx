@@ -69,10 +69,10 @@ const QuizTake = () => {
         try {
             const submissionAnswers = quiz.questions.map((q: any, idx: number) => {
                 const selectedIdx = answers[idx];
-                return selectedIdx !== undefined ? q.options[selectedIdx] : '';
+                return selectedIdx !== undefined ? String(selectedIdx) : '';
             });
             const result = await quizService.submitAttempt(id!, { answers: submissionAnswers });
-            setScore(result.score);
+            setScore(result.percentage);
             setStatus('finished');
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to submit quiz.');
@@ -90,15 +90,15 @@ const QuizTake = () => {
         if (!id) return;
         setStatus('submitting');
         try {
-            // Backend expects answers as an ordered array of selected option strings
+            // Backend expects answers as an ordered array of selected option stringified indices
             // It compares answers[idx] === question.correctAnswer (string)
             const submissionAnswers = quiz.questions.map((q: any, idx: number) => {
                 const selectedIdx = answers[idx];
-                return selectedIdx !== undefined ? q.options[selectedIdx] : '';
+                return selectedIdx !== undefined ? String(selectedIdx) : '';
             });
 
             const result = await quizService.submitAttempt(id, { answers: submissionAnswers });
-            setScore(result.score);
+            setScore(result.percentage);
             setStatus('finished');
         } catch (err: any) {
             alert(err.response?.data?.message || 'Failed to submit quiz.');
@@ -210,10 +210,10 @@ const QuizTake = () => {
                                     onClick={() => handleAnswer(idx)}
                                     className={`w-full p-5 rounded-2xl border-2 text-left transition-all flex items-center justify-between group ${answers[currentQuestion] === idx
                                         ? 'border-primary bg-primary/5 text-primary'
-                                        : 'border-slate-100 hover:border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        : 'border-slate-200 hover:border-slate-300 text-slate-800 bg-slate-100 hover:bg-slate-200'
                                         }`}
                                 >
-                                    <span className="font-medium">{option}</span>
+                                    <span className="font-semibold">{option}</span>
                                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${answers[currentQuestion] === idx ? 'border-primary bg-primary' : 'border-slate-200 group-hover:border-slate-300'
                                         }`}>
                                         {answers[currentQuestion] === idx && <CheckCircle2 size={14} className="text-white" />}

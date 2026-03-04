@@ -13,7 +13,8 @@ import {
     User,
     Menu,
     X,
-    ChevronDown
+    ChevronDown,
+    Brain
 } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -59,11 +60,15 @@ const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
         navigate('/login');
     };
 
+    const user = authService.getCurrentUser();
+    const isStudent = user?.role !== 'TEACHER' && user?.role !== 'ADMIN';
+
     const menuItems = [
         { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
         { label: 'My Courses', icon: BookOpen, path: '/dashboard/courses' },
         { label: 'Quizzes', icon: HelpCircle, path: '/dashboard/quizzes' },
         { label: 'Academy', icon: GraduationCap, path: '/dashboard/academy' },
+        ...(isStudent ? [{ label: 'AI Study Assistant', icon: Brain, path: '/dashboard/study-assistant' }] : []),
         { label: 'Settings', icon: Settings, path: '/dashboard/settings' },
     ];
 

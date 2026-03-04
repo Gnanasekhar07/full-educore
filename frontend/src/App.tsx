@@ -22,6 +22,7 @@ import MyQuizzes from './pages/quizzes/MyQuizzes';
 import InstructorDashboard from './pages/dashboards/InstructorDashboard';
 import StudentDashboard from './pages/dashboards/StudentDashboard';
 import Settings from './pages/settings/Settings';
+import StudyAssistant from './pages/StudyAssistant';
 import ToastContainer from './components/Toast';
 import CustomCursor from './components/CustomCursor';
 
@@ -105,13 +106,16 @@ const Landing = () => {
                         <Link to="/register" className="btn-primary px-8 py-3 text-base shadow-xl shadow-primary/20">
                             Start Learning
                         </Link>
-                        <button className="glass border-slate-200 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-all">
+                        <button
+                            onClick={() => document.getElementById('role-cards')?.scrollIntoView({ behavior: 'smooth' })}
+                            className="glass border-slate-200 px-8 py-3 rounded-lg font-medium hover:bg-slate-50 transition-all"
+                        >
                             Platform Demo
                         </button>
                     </motion.div>
 
                     {/* Role Cards */}
-                    <div className="grid md:grid-cols-3 gap-8 mt-24">
+                    <div id="role-cards" className="grid md:grid-cols-3 gap-8 mt-24">
                         {features.map((feature, idx) => (
                             <motion.div
                                 key={feature.id}
@@ -198,6 +202,7 @@ function App() {
                 <Route path="/dashboard/quizzes" element={<MyQuizzes />} />
                 <Route path="/dashboard/quizzes/take/:id" element={<QuizTake />} />
                 <Route path="/dashboard/quizzes/create/:courseId" element={<QuizCreate />} />
+                <Route path="/dashboard/study-assistant" element={<StudyAssistant />} />
                 <Route path="/dashboard/settings" element={<Settings />} />
             </Routes>
         </Router>

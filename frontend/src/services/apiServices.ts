@@ -21,6 +21,36 @@ export const authService = {
         return response.data;
     },
 
+    async googleLogin(credential: string) {
+        const response = await api.post('/auth/google', { credential });
+        if (response.data.token) {
+            localStorage.setItem('token', response.data.token);
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+            localStorage.setItem('role', response.data.user.role);
+        }
+        return response.data;
+    },
+
+    async forgotPassword(email: string) {
+        const response = await api.post('/auth/forgot-password', { email });
+        return response.data;
+    },
+
+    async updateProfile(data: { name: string }) {
+        const response = await api.put('/auth/profile', data);
+        if (response.data.user) {
+            const current = JSON.parse(localStorage.getItem('user') || '{}');
+            const updated = { ...current, ...response.data.user };
+            localStorage.setItem('user', JSON.stringify(updated));
+        }
+        return response.data;
+    },
+
+    async changePassword(data: { currentPassword: string; newPassword: string }) {
+        const response = await api.put('/auth/change-password', data);
+        return response.data;
+    },
+
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('user');

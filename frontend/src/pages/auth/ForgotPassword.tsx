@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LayoutDashboard, Mail, ArrowLeft, Loader2, CheckCircle2, Send } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { authService } from '../../services/apiServices';
 
 const ForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -12,11 +13,13 @@ const ForgotPassword = () => {
         e.preventDefault();
         setStatus('sending');
         setError('');
-
-        // Simulate password reset email — backend doesn't have this endpoint yet
-        setTimeout(() => {
+        try {
+            await authService.forgotPassword(email);
             setStatus('sent');
-        }, 1500);
+        } catch (err: any) {
+            setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+            setStatus('idle');
+        }
     };
 
     return (
@@ -49,7 +52,7 @@ const ForgotPassword = () => {
                                 </motion.div>
                                 <h1 className="text-2xl font-bold text-slate-900 text-center">Check Your Email</h1>
                                 <p className="text-slate-500 mt-2 text-center text-sm">
-                                    We've sent password reset instructions to <strong className="text-slate-700">{email}</strong>. Please check your inbox.
+                                    If <strong className="text-slate-700">{email}</strong> is registered, you'll receive password reset instructions shortly.
                                 </p>
                                 <Link
                                     to="/login"
@@ -62,7 +65,7 @@ const ForgotPassword = () => {
                             <>
                                 <h1 className="text-2xl font-bold text-slate-900">Reset Password</h1>
                                 <p className="text-slate-500 mt-2 text-center text-sm">
-                                    Enter your email address and we'll send you instructions to reset your password.
+                                    Enter your email address and we'll verify your account.
                                 </p>
                             </>
                         )}
@@ -71,7 +74,7 @@ const ForgotPassword = () => {
                     {status !== 'sent' && (
                         <form onSubmit={handleSubmit} className="space-y-6">
                             {error && (
-                                <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-medium animate-shake">
+                                <div className="p-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-sm font-medium">
                                     {error}
                                 </div>
                             )}
@@ -100,9 +103,7 @@ const ForgotPassword = () => {
                                 {status === 'sending' ? (
                                     <Loader2 className="animate-spin" size={20} />
                                 ) : (
-                                    <>
-                                        <Send size={18} /> Send Reset Link
-                                    </>
+                                    <><Send size={18} /> Send Reset Link</>
                                 )}
                             </button>
                         </form>

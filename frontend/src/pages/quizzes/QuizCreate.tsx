@@ -64,6 +64,27 @@ const QuizCreate = () => {
         setQuestions(newQuestions);
     };
 
+    const addOption = (qIdx: number) => {
+        const newQuestions = [...questions];
+        newQuestions[qIdx].options.push('');
+        setQuestions(newQuestions);
+    };
+
+    const removeOption = (qIdx: number, oIdx: number) => {
+        const newQuestions = [...questions];
+        if (newQuestions[qIdx].options.length <= 2) {
+            toast.error('Minimum Options', 'A question must have at least 2 options.');
+            return;
+        }
+        newQuestions[qIdx].options.splice(oIdx, 1);
+        if (newQuestions[qIdx].correctAnswer === oIdx) {
+            newQuestions[qIdx].correctAnswer = 0;
+        } else if (newQuestions[qIdx].correctAnswer > oIdx) {
+            newQuestions[qIdx].correctAnswer -= 1;
+        }
+        setQuestions(newQuestions);
+    };
+
     const handleSave = async () => {
         if (!selectedCourse || !title) {
             toast.error('Missing Info', 'Please select a course and enter a title.');
@@ -209,27 +230,42 @@ const QuizCreate = () => {
 
                                         <div className="grid md:grid-cols-2 gap-4">
                                             {q.options.map((option: string, oIdx: number) => (
-                                                <div key={oIdx} className="relative group/option">
-                                                    <input
-                                                        type="text"
-                                                        value={option}
-                                                        onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
-                                                        placeholder={`Option ${oIdx + 1}`}
-                                                        className={`w-full pl-12 pr-4 py-4 rounded-xl border-2 transition-all outline-none ${q.correctAnswer === oIdx
-                                                            ? 'border-green-500 bg-green-50/50'
-                                                            : 'border-slate-100 focus:border-slate-200 bg-white'
-                                                            }`}
-                                                    />
+                                                <div key={oIdx} className="flex items-center gap-2 group/option">
+                                                    <div className="relative flex-1">
+                                                        <input
+                                                            type="text"
+                                                            value={option}
+                                                            onChange={(e) => updateOption(qIdx, oIdx, e.target.value)}
+                                                            placeholder={`Option ${oIdx + 1}`}
+                                                            className={`w-full pl-12 pr-4 py-4 rounded-xl border-2 transition-all outline-none text-slate-800 font-semibold ${q.correctAnswer === oIdx
+                                                                ? 'border-green-500 bg-green-50/50'
+                                                                : 'border-slate-200 focus:border-slate-300 bg-slate-100'
+                                                                }`}
+                                                        />
+                                                        <button
+                                                            onClick={() => updateQuestion(qIdx, 'correctAnswer', oIdx)}
+                                                            className={`absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${q.correctAnswer === oIdx ? 'bg-green-500 border-green-500 text-white' : 'border-slate-200 hover:border-slate-300'
+                                                                }`}
+                                                        >
+                                                            {q.correctAnswer === oIdx && <CheckCircle2 size={12} />}
+                                                        </button>
+                                                    </div>
                                                     <button
-                                                        onClick={() => updateQuestion(qIdx, 'correctAnswer', oIdx)}
-                                                        className={`absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${q.correctAnswer === oIdx ? 'bg-green-500 border-green-500 text-white' : 'border-slate-200 hover:border-slate-300'
-                                                            }`}
+                                                        onClick={() => removeOption(qIdx, oIdx)}
+                                                        className="p-3 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                                        title="Remove Option"
                                                     >
-                                                        {q.correctAnswer === oIdx && <CheckCircle2 size={12} />}
+                                                        <Trash2 size={18} />
                                                     </button>
                                                 </div>
                                             ))}
                                         </div>
+                                        <button
+                                            onClick={() => addOption(qIdx)}
+                                            className="mt-4 text-sm font-bold text-primary hover:text-primary/80 flex items-center gap-1"
+                                        >
+                                            <Plus size={16} /> Add Option
+                                        </button>
                                     </div>
                                 </motion.div>
                             ))}

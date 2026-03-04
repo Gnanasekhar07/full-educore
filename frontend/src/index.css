@@ -63,17 +63,36 @@
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 24px;
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
-  transition: all 0.3s ease;
+  box-shadow:
+    0 8px 32px 0 rgba(31, 38, 135, 0.07),
+    4px 4px 0px 0px rgba(0, 0, 0, 0.1),
+    8px 8px 0px 0px rgba(0, 0, 0, 0.05);
+  transform: translate(-4px, -4px);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .glass-card:hover {
-  box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.1);
+  box-shadow:
+    0 12px 40px 0 rgba(31, 38, 135, 0.1),
+    8px 8px 0px 0px rgba(0, 0, 0, 0.1),
+    16px 16px 0px 0px rgba(0, 0, 0, 0.05);
+  transform: translate(-8px, -8px);
 }
 
 .dark .glass-card {
   background: var(--card-dark);
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.3),
+    4px 4px 0px 0px rgba(255, 255, 255, 0.05),
+    8px 8px 0px 0px rgba(255, 255, 255, 0.02);
+}
+
+.dark .glass-card:hover {
+  box-shadow:
+    0 12px 40px 0 rgba(0, 0, 0, 0.4),
+    8px 8px 0px 0px rgba(255, 255, 255, 0.05),
+    16px 16px 0px 0px rgba(255, 255, 255, 0.02);
 }
 
 .btn-primary {
@@ -83,14 +102,51 @@
   border-radius: 0.5rem;
   font-weight: 500;
   transition: all 0.2s ease;
+  /* Add 3D effect base */
+  box-shadow: 0 4px 0 hsl(221.2 83.2% 40%), 0 5px 5px rgba(0, 0, 0, 0.2);
+  transform: translateY(0);
+}
+
+.btn-primary:active,
+.btn-primary:hover:active {
+  box-shadow: 0 0 0 hsl(221.2 83.2% 40%), 0 0 0 rgba(0, 0, 0, 0.2);
+  transform: translateY(4px);
 }
 
 .btn-primary:hover {
   opacity: 0.9;
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 hsl(221.2 83.2% 40%), 0 3px 3px rgba(0, 0, 0, 0.2);
 }
 
-.btn-primary:active {
-  transform: scale(0.95);
+/* 3D Global Utilities */
+.card-3d {
+  box-shadow:
+    4px 4px 0px 0px rgba(0, 0, 0, 0.1),
+    8px 8px 0px 0px rgba(0, 0, 0, 0.05);
+  border: 2px solid rgba(0, 0, 0, 0.05);
+  transform: translate(-4px, -4px);
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.card-3d:hover {
+  box-shadow:
+    8px 8px 0px 0px rgba(0, 0, 0, 0.1),
+    16px 16px 0px 0px rgba(0, 0, 0, 0.05);
+  transform: translate(-8px, -8px);
+}
+
+.dark .card-3d {
+  box-shadow:
+    4px 4px 0px 0px rgba(255, 255, 255, 0.05),
+    8px 8px 0px 0px rgba(255, 255, 255, 0.02);
+  border: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark .card-3d:hover {
+  box-shadow:
+    8px 8px 0px 0px rgba(255, 255, 255, 0.05),
+    16px 16px 0px 0px rgba(255, 255, 255, 0.02);
 }
 
 body {

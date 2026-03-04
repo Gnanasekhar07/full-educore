@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import DashboardLayout from '../../components/DashboardLayout';
 import AnnouncementFeed from '../../components/AnnouncementFeed';
+import StreakDisplay from '../../components/StreakDisplay';
 import { enrollmentService, authService, announcementService, quizService } from '../../services/apiServices';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -22,6 +23,7 @@ const StudentDashboard = () => {
     const [announcements, setAnnouncements] = useState<any[]>([]);
     const [performance, setPerformance] = useState<{ badges: number, coursesCount: number, quizBadges: number } | null>(null);
     const [upcomingQuizzes, setUpcomingQuizzes] = useState<any[]>([]);
+    const [quizzesByCourse, setQuizzesByCourse] = useState<Record<string, { total: number; completed: number }>>({});
     const [loading, setLoading] = useState(true);
     const user = authService.getCurrentUser();
 
@@ -38,6 +40,22 @@ const StudentDashboard = () => {
                 setAnnouncements(annData);
                 setPerformance(perfData);
                 setUpcomingQuizzes(quizzesData);
+
+                // Build per-course quiz progress from performance data
+                const progressMap: Record<string, { total: number; completed: number }> = {};
+                if (perfData?.courseProgress) {
+                    Object.assign(progressMap, perfData.courseProgress);
+                } else if (coursesData.length > 0) {
+                    // Fallback: fetch quiz data for each enrolled course
+                    await Promise.all(coursesData.map(async (c: any) => {
+                        try {
+                            const qs = await quizService.getQuizzesByCourse(c.id);
+                            const completed = qs.filter((q: any) => q.bestAttempt).length;
+                            progressMap[c.id] = { total: qs.length, completed };
+                        } catch { progressMap[c.id] = { total: 0, completed: 0 }; }
+                    }));
+                }
+                setQuizzesByCourse(progressMap);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -67,6 +85,8 @@ const StudentDashboard = () => {
                     </div>
                 </div>
 
+                <StreakDisplay />
+
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-2 space-y-8">
                         <div className="flex justify-between items-center">
@@ -87,39 +107,45 @@ const StudentDashboard = () => {
                                     <p className="text-slate-500">You haven't enrolled in any courses yet.</p>
                                 </div>
                             ) : (
-                                courses.map((course, idx) => (
-                                    <motion.div
-                                        key={idx}
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.1 }}
-                                        className="glass-card p-6 group hover:translate-x-1 transition-all"
-                                    >
-                                        <div className="flex gap-5">
-                                            <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
-                                                <BookOpen size={28} />
-                                            </div>
-                                            <div className="flex-1 space-y-4">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <h3 className="font-bold text-slate-800 text-lg group-hover:text-primary transition-colors">{course.title}</h3>
-                                                        <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
-                                                            <Clock size={12} /> Enrolled on {new Date(course.enrolledAt).toLocaleDateString()}
+                                courses.map((course, idx) => {
+                                    const prog = quizzesByCourse[course.id];
+                                    const pct = prog && prog.total > 0 ? Math.round((prog.completed / prog.total) * 100) : 0;
+                                    return (
+                                        <motion.div
+                                            key={idx}
+                                            initial={{ opacity: 0, x: -20 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.1 }}
+                                            onClick={() => navigate(`/dashboard/courses/${course.id}`)}
+                                            className="glass-card p-6 group hover:translate-x-1 transition-all cursor-pointer"
+                                        >
+                                            <div className="flex gap-5">
+                                                <div className="w-14 h-14 rounded-2xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
+                                                    <BookOpen size={28} />
+                                                </div>
+                                                <div className="flex-1 space-y-4">
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <h3 className="font-bold text-slate-800 text-lg group-hover:text-primary transition-colors">{course.title}</h3>
+                                                            <div className="text-xs text-slate-400 mt-1 flex items-center gap-2">
+                                                                <Clock size={12} /> Enrolled on {new Date(course.enrolledAt).toLocaleDateString()}
+                                                            </div>
                                                         </div>
+                                                        <div className="text-sm font-bold text-slate-900">{pct}%</div>
                                                     </div>
-                                                    <div className="text-sm font-bold text-slate-900">Progress: 0%</div>
-                                                </div>
-                                                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `0%` }}
-                                                        className="h-full bg-primary"
-                                                    />
+                                                    <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                                                        <motion.div
+                                                            initial={{ width: 0 }}
+                                                            animate={{ width: `${pct}%` }}
+                                                            transition={{ duration: 0.8, ease: 'easeOut' }}
+                                                            className={`h-full rounded-full ${pct === 100 ? 'bg-green-500' : 'bg-primary'}`}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </motion.div>
-                                ))
+                                        </motion.div>
+                                    );
+                                })
                             )}
                         </div>
                     </div>
@@ -155,7 +181,7 @@ const StudentDashboard = () => {
                                     upcomingQuizzes.map((quiz, idx) => (
                                         <div
                                             key={quiz.id || idx}
-                                            onClick={() => navigate(`/dashboard/courses/${quiz.courseId}/quiz/${quiz.id}`)}
+                                            onClick={() => navigate(`/dashboard/quizzes/take/${quiz.id}`)}
                                             className="glass-card p-4 hover:border-primary/30 transition-all cursor-pointer group"
                                         >
                                             <div className="text-xs font-bold text-primary mb-1">{quiz.course?.title}</div>

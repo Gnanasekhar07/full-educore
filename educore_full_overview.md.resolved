@@ -1,0 +1,364 @@
+# EduCore — Full Implementation & Deployment Overview
+
+A complete reference for understanding, extending, and publishing the EduCore platform.
+
+---
+
+## 🧱 Tech Stack
+
+### Frontend
+| Technology | Version | Purpose |
+|---|---|---|
+| **React** | 19 | UI library |
+| **TypeScript** | 5.9 | Type safety |
+| **Vite** | 7 | Build tool & dev server |
+| **TailwindCSS** | 4 | Utility-first styling |
+| **Framer Motion** | 12 | Animations |
+| **React Router DOM** | 7 | Client-side routing |
+| **Axios** | 1.13 | HTTP requests to backend |
+| **Lucide React** | 0.575 | Icons |
+| **Recharts** | 3 | Charts & analytics |
+
+### Backend
+| Technology | Version | Purpose |
+|---|---|---|
+| **Node.js** | 18+ | Runtime |
+| **Express** | 5 | HTTP server / REST API |
+| **TypeScript** | 5.9 | Type safety |
+| **Prisma ORM** | 5.22 | Database access |
+| **SQLite** | — | Database (file-based) |
+| **bcryptjs** | 3 | Password hashing |
+| **jsonwebtoken** | 9 | JWT authentication |
+| **dotenv** | 17 | Environment variables |
+| **tsx** | 4 | TypeScript runner for dev |
+
+### AI Feature (to be added)
+| Technology | Purpose |
+|---|---|
+| **@google/generative-ai** | Google Gemini SDK for AI chat |
+| **Gemini 1.5 Flash** | LLM model (free tier available) |
+
+---
+
+## 📁 Project Folder Structure
+
+```
+educore/
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma          ← Database models
+│   │   └── dev.db                 ← SQLite database file
+│   ├── src/
+│   │   ├── config/
+│   │   │   └── prisma.ts          ← Prisma client singleton
+│   │   ├── controllers/
+│   │   │   ├── authController.ts  ← Register, Login, Streak
+│   │   │   ├── courseController.ts
+│   │   │   ├── enrollmentController.ts
+│   │   │   ├── quizController.ts
+│   │   │   ├── announcementController.ts
+│   │   │   └── aiController.ts    ← [NEW] AI chat endpoint
+│   │   ├── middlewares/
+│   │   │   └── auth.ts            ← JWT authenticate + authorize
+│   │   ├── routes/
+│   │   │   ├── authRoutes.ts
+│   │   │   ├── courseRoutes.ts
+│   │   │   ├── enrollmentRoutes.ts
+│   │   │   ├── quizRoutes.ts
+│   │   │   ├── announcementRoutes.ts
+│   │   │   └── aiRoutes.ts        ← [NEW]
+│   │   └── index.ts               ← Express app entry point
+│   ├── package.json
+│   └── tsconfig.json
+│
+└── frontend/
+    ├── public/
+    ├── src/
+    │   ├── components/
+    │   │   ├── DashboardLayout.tsx ← Sidebar + nav shell
+    │   │   ├── CourseCard.tsx
+    │   │   ├── CourseList.tsx
+    │   │   ├── QuizList.tsx
+    │   │   ├── AnnouncementFeed.tsx
+    │   │   ├── StreakDisplay.tsx
+    │   │   ├── Toast.tsx
+    │   │   ├── ThemeToggle.tsx
+    │   │   ├── CustomCursor.tsx
+    │   │   └── AIChatbot.tsx      ← [NEW] Floating AI chat widget
+    │   ├── pages/
+    │   │   ├── auth/              ← Login, Register, ForgotPassword
+    │   │   ├── courses/           ← Academy, CourseDetail, CreateCourse
+    │   │   ├── dashboards/        ← StudentDashboard, InstructorDashboard
+    │   │   ├── quizzes/           ← QuizTake, QuizCreate, MyQuizzes
+    │   │   └── settings/          ← Settings
+    │   ├── services/
+    │   │   ├── api.ts             ← Axios instance (base URL + auth header)
+    │   │   └── apiServices.ts     ← auth, course, enrollment, quiz, announcement, ai services
+    │   ├── App.tsx                ← Router + all routes
+    │   ├── index.css              ← Global styles + Tailwind
+    │   └── main.tsx               ← React entry point
+    ├── package.json
+    └── vite.config.ts
+```
+
+---
+
+## 🗄️ Database Schema (Prisma / SQLite)
+
+```mermaid
+erDiagram
+    User {
+        String id PK
+        String name
+        String email
+        String password
+        String role
+        Int currentStreak
+        Int longestStreak
+        DateTime lastLogin
+    }
+    Course {
+        String id PK
+        String title
+        String description
+        String teacherId FK
+    }
+    Enrollment {
+        String id PK
+        String userId FK
+        String courseId FK
+        DateTime enrolledAt
+    }
+    Quiz {
+        String id PK
+        String title
+        String courseId FK
+        DateTime startDate
+        DateTime endDate
+        Int timeLimit
+    }
+    Question {
+        String id PK
+        String quizId FK
+        String text
+        String options
+        String correctAnswer
+    }
+    QuizAttempt {
+        String id PK
+        String userId FK
+        String quizId FK
+        Int score
+        Int total
+    }
+    Announcement {
+        String id PK
+        String title
+        String content
+        String courseId FK
+        String authorId FK
+    }
+
+    User ||--o{ Course : "teaches"
+    User ||--o{ Enrollment : "has"
+    User ||--o{ QuizAttempt : "makes"
+    User ||--o{ Announcement : "authors"
+    Course ||--o{ Enrollment : "has"
+    Course ||--o{ Quiz : "has"
+    Course ||--o{ Announcement : "has"
+    Quiz ||--o{ Question : "has"
+    Quiz ||--o{ QuizAttempt : "has"
+```
+
+---
+
+## 🔐 Authentication & Roles
+
+- **JWT-based** auth — token stored in `localStorage`
+- **3 Roles:**
+  - `STUDENT` — Enroll in courses, take quizzes, view performance
+  - `TEACHER` — Create courses, create quizzes, add/view students, post announcements
+  - `ADMIN` — Full platform access
+- **Login Streak** — Tracked daily via `lastLogin`, `currentStreak`, `longestStreak` on the [User](file:///c:/Users/gnana/OneDrive/Desktop/KLU/projects-gnana/educore/frontend/src/services/apiServices.ts#30-34) model
+
+---
+
+## 🌐 API Endpoints
+
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/register` | No | Create account |
+| POST | `/api/auth/login` | No | Login + get JWT |
+| GET | `/api/courses` | No | List all courses |
+| GET | `/api/courses/:id` | No | Course detail |
+| POST | `/api/courses` | TEACHER/ADMIN | Create course |
+| PUT | `/api/courses/:id` | TEACHER/ADMIN | Update course |
+| DELETE | `/api/courses/:id` | TEACHER/ADMIN | Delete course |
+| POST | `/api/enrollments` | Any | Enroll in course |
+| GET | `/api/enrollments/my-courses` | Any | My enrolled courses |
+| GET | `/api/enrollments/my-performance` | Any | My quiz scores |
+| GET | `/api/enrollments/course/:id/students` | TEACHER | Students in course |
+| POST | `/api/enrollments/course/:id/add-student` | TEACHER | Add student by email |
+| GET | `/api/quizzes/course/:id` | Any | Quizzes for a course |
+| GET | `/api/quizzes/:id` | Any | Quiz detail |
+| POST | `/api/quizzes` | TEACHER | Create quiz |
+| POST | `/api/quizzes/submit` | Any | Submit quiz attempt |
+| GET | `/api/announcements` | Any | All announcements |
+| POST | `/api/announcements` | TEACHER | Create announcement |
+| **POST** | **`/api/ai/chat`** | **Any (logged in)** | **[NEW] AI course chatbot** |
+
+---
+
+## 🤖 AI Chatbot Feature (New Addition)
+
+The chatbot appears as a **floating glowing icon** at the bottom-right of every course detail page. When clicked, it opens an animated chat panel. It uses the course's context (title, description, instructor, quizzes, announcements) to answer student doubts intelligently.
+
+**Flow:**
+```
+Student types question
+       ↓
+Frontend sends: { message, courseContext } → POST /api/ai/chat
+       ↓
+Backend builds system prompt with course context
+       ↓
+Calls Google Gemini 1.5 Flash API
+       ↓
+Returns { reply: string }
+       ↓
+Chat bubble rendered in UI
+```
+
+**Required:** `GEMINI_API_KEY` in [backend/.env](file:///c:/Users/gnana/OneDrive/Desktop/KLU/projects-gnana/educore/backend/.env)
+
+---
+
+## 🚀 Deployment Guide (Step-by-Step)
+
+### Option A — Easiest: Render (Free Tier)
+
+#### 1. Prepare Backend for Production
+
+Switch the database from **SQLite → PostgreSQL** (SQLite is not suitable for hosted servers):
+
+```bash
+# In backend/
+npm install @prisma/client
+```
+
+Update [schema.prisma](file:///c:/Users/gnana/OneDrive/Desktop/KLU/projects-gnana/educore/backend/prisma/schema.prisma):
+```prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+```
+
+Run migration:
+```bash
+npx prisma migrate deploy
+```
+
+#### 2. Backend `.env` Variables
+
+```env
+DATABASE_URL=postgresql://user:password@host:5432/educore
+JWT_SECRET=your_super_secret_jwt_key_here
+PORT=5000
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+#### 3. Deploy Backend on [Render](https://render.com)
+
+1. Push everything to GitHub
+2. Create a **New Web Service** on Render
+3. Connect your GitHub repo → select the `backend/` folder
+4. Build command: `npm install && npm run build`
+5. Start command: `node dist/index.js`
+6. Add all env variables in the Render dashboard
+7. Also create a **PostgreSQL** database on Render (free) → copy the connection URL
+
+#### 4. Deploy Frontend on [Vercel](https://vercel.com)
+
+1. Create a new project on Vercel
+2. Connect your GitHub repo → select `frontend/` as root
+3. Build command: `npm run build`
+4. Output directory: `dist`
+5. Add env variable:
+   ```
+   VITE_API_URL=https://your-backend-url.onrender.com/api
+   ```
+6. Update [frontend/src/services/api.ts](file:///c:/Users/gnana/OneDrive/Desktop/KLU/projects-gnana/educore/frontend/src/services/api.ts) to use:
+   ```ts
+   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+   ```
+
+---
+
+### Option B — Full Control: VPS (DigitalOcean / AWS)
+
+| Step | Details |
+|---|---|
+| Server | Ubuntu 22.04 Droplet (min 1GB RAM) |
+| Node | Install via nvm (`nvm install 20`) |
+| Database | PostgreSQL via `apt` |
+| Process manager | `pm2` (`npm i -g pm2`) |
+| Reverse proxy | Nginx pointing `api.yourdomain.com` → port 5000 |
+| SSL | Let's Encrypt via `certbot` |
+| Frontend | Build with `npm run build` → serve `dist/` via Nginx |
+
+---
+
+### Option C — Docker (Advanced)
+
+Create a `docker-compose.yml` at root:
+```yaml
+version: '3.8'
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: educore
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: secret
+  backend:
+    build: ./backend
+    ports: ["5000:5000"]
+    env_file: ./backend/.env
+    depends_on: [db]
+  frontend:
+    build: ./frontend
+    ports: ["3000:80"]
+```
+
+---
+
+## ✅ Pre-Launch Checklist
+
+- [ ] Switch SQLite → PostgreSQL for production
+- [ ] Set strong `JWT_SECRET` (at least 64 random chars)
+- [ ] Add `GEMINI_API_KEY` to backend env
+- [ ] Update frontend `VITE_API_URL` to point to deployed backend
+- [ ] Enable CORS for your frontend domain in [backend/src/index.ts](file:///c:/Users/gnana/OneDrive/Desktop/KLU/projects-gnana/educore/backend/src/index.ts)
+- [ ] Run `prisma migrate deploy` on production DB
+- [ ] Test all 3 roles (STUDENT, TEACHER, ADMIN) end-to-end
+- [ ] Test AI chatbot on a real course
+- [ ] Set up a custom domain (optional but recommended)
+
+---
+
+## 💡 Quick Local Dev Commands
+
+```bash
+# Start backend
+cd backend
+npm run dev       # Runs on http://localhost:5000
+
+# Start frontend (new terminal)
+cd frontend
+npm run dev       # Runs on http://localhost:5173
+
+# Prisma tools
+npx prisma studio  # Visual DB browser at localhost:5555
+npx prisma migrate dev --name <migration_name>
+npx prisma generate
+```
